@@ -29,8 +29,8 @@ public class SecurityFilterConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, RedisSessionCheck redisSessionCheck) throws Exception{
         http
                 .csrf((csrf) -> csrf.disable())
+                .authenticationProvider(customAuthenticationProvider)
                 .addFilterBefore(redisSessionCheck, UsernamePasswordAuthenticationFilter.class)
-//                .requiresChannel(rec -> rec.anyRequest().requiresInsecure())
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/","/login","/signup","/forget-password","/reset-password").permitAll()
                         .anyRequest().permitAll())
@@ -45,11 +45,12 @@ public class SecurityFilterConfiguration {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-//        AuthenticationManagerBuilder authBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-//        authBuilder.authenticationProvider(customAuthenticationProvider);
-//        return authBuilder.build();
-//    }
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http,
+                                                       CustomAuthenticationProvider customProvider) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(customProvider)
+                .build();
+    }
 
 }

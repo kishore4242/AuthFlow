@@ -1,10 +1,9 @@
 package com.example.signup.service;
 
 import com.example.signup.dto.LoginDTO;
-import com.example.signup.exception.InvalidCredentialException;
+import com.example.signup.security.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -26,6 +26,8 @@ public class LoginService {
 
     private final StringRedisTemplate redisTemplate;
     private final AuthenticationManager authenticationManager;
+    private final MyUserDetailsService myUserDetailsService;
+    private final JwtService jwtService;
 
     public ResponseEntity<?> login(String username, String password) {
         log.debug("Attempt login for user: {}", username);
@@ -34,16 +36,18 @@ public class LoginService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
 
-            String sessionToken = UUID.randomUUID().toString();
             String userDetails = username + ":" + auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));
 
-            log.info("Generated session token: {} for user: {}", sessionToken, username);
+            log.info("Generated session token: {} for user: {}", username);
 
-            redisTemplate.opsForValue().set("session:" + sessionToken, userDetails, 100, TimeUnit.SECONDS);
+            UserDetails userDetails1 = myUserDetailsService.loadUserByUsername(username);
 
-            return ResponseEntity.ok(new LoginDTO("Login Success", sessionToken));
+            String jwtToken = jwtService.generateToken(userDetails1);
+
+
+            return ResponseEntity.ok(jwtToken);
 
         } catch (AuthenticationException e) {
             log.warn("Authentication failed for user: {}", username);
