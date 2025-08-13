@@ -1,6 +1,5 @@
 package com.example.signup.service;
 
-import com.example.signup.dto.LoginDTO;
 import com.example.signup.security.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +14,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,9 +36,7 @@ public class LoginService {
             String userDetails = username + ":" + auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.joining(","));
-
-            log.info("Generated session token: {} for user: {}", username);
-
+            
             UserDetails userDetails1 = myUserDetailsService.loadUserByUsername(username);
 
             String jwtToken = jwtService.generateToken(userDetails1);
