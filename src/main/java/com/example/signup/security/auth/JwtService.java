@@ -5,7 +5,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +17,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    //    @Value("${jwt.expiration.ms}")
-    private final long jwtExpiration = 120;
+    private final long jwtExpiration = 3000*1000;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -31,10 +29,10 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        return generateTokens(new HashMap<>(), userDetails);
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+    public String generateTokens(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -59,22 +57,26 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts
+                    .parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        }
+        catch (Exception e){
+            throw new RuntimeException("Expired token");
+        }
     }
 
     private Key getSignInKey() {
-        //    @Value("${jwt.secret}")
-        String secretKey = "1233445678909437192341973983";
+        String secretKey = "yWQ3nFmfGpAj6rHsVZ6nH8lQxgJtRZyx0rwxhYSk0dQ";
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public long getExpirationTime() {
-        return jwtExpiration;
+        return this.jwtExpiration;
     }
 }

@@ -3,21 +3,24 @@ package com.example.signup.service;
 import com.example.signup.model.User;
 import com.example.signup.repository.SignupRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.core.GrantedAuthorityDefaults;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-@Service
+@Component
 @Slf4j
 public class MyUserDetailsService implements UserDetailsService {
+
     private final SignupRepo signupRepo;
 
-    MyUserDetailsService(SignupRepo signupRepo){
+    public MyUserDetailsService(SignupRepo signupRepo){
         this.signupRepo = signupRepo;
     }
 
