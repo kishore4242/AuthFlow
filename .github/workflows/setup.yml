@@ -61,3 +61,6 @@ jobs:
 
       - name: Build with Maven
         run: mvn -B clean verify
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
