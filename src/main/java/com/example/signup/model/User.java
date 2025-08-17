@@ -17,12 +17,11 @@ public class User  {
     @Column(name = "username",nullable = false,unique = true)
     private String userName;
 
+    @Column(name = "email",nullable = false,unique = true)
+    private String email;
+
     @Column(name = "password", nullable = false)
     private String password;
 
-//    private Roles roles;
 
-//    private LocalDateTime createAt;
-//
-//    private LocalDateTime updateAt;
 }
