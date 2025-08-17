@@ -25,16 +25,17 @@ public class SignupService {
     public ResponseEntity<String> register(RegisterRequest request){
         /**
          * save new user inside the database
-         * @param user the user entity containing registration details
+         * @param email the user entity containing registration details
          * @return the saved user entity with an assigned ID
          */
         try{
             log.info("New user trying to register");
-            if(signUpRepo.existsByUserName(request.getUserName())){
-                log.info("Username Already available");
-                throw new UserAlreadyAvailableException("Username already found");
+            if(signUpRepo.existsByEmail(request.getEmail().toString())){
+                log.info("Email Already available");
+                throw new UserAlreadyAvailableException("Email already found");
             }
             User user = new User();
+            user.setEmail(request.getEmail());
             user.setUserName(request.getUserName());
             log.info("Saving user with password: {} length: {}", request.getPassword(),request.getPassword() != null ? request.getPassword().length() : "null");
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -42,7 +43,7 @@ public class SignupService {
             return new ResponseEntity<>("User created Successfully",HttpStatus.CREATED);
         }
         catch(UserAlreadyAvailableException e){
-            log.error("User name already available {}",request.getUserName());
+            log.error("User name already available {}",request.getEmail().toString());
             return new ResponseEntity<>("User Already available",HttpStatus.CONFLICT);
         }
         catch (Exception e){
