@@ -16,11 +16,11 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: kishore
+          POSTGRES_DB: firstapplication
         options: >-
-          --health-cmd="pg_isready -U test -d testdb"
+          --health-cmd="pg_isready -U postgres -d firstapplication"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
