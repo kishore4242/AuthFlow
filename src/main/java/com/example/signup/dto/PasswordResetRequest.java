@@ -12,9 +12,12 @@ public class PasswordResetRequest {
 
     private String username;
 
-    public PasswordResetRequest(String email,String username) {
+    private String otp;
+
+    public PasswordResetRequest(String email,String username,String otp) {
         this.email = email;
         this.username = username;
+        this.otp = otp;
     }
     public PasswordResetRequest(){
 

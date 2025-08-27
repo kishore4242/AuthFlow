@@ -1,12 +1,14 @@
 package com.example.signup.service;
 
 import com.example.signup.dto.EmailDto;
+import com.example.signup.dto.NewPassword;
 import com.example.signup.dto.PasswordResetRequest;
 import com.example.signup.repository.SignupRepo;
 import com.example.signup.security.auth.JwtService;
-import jakarta.validation.constraints.Email;
+import com.example.signup.security.auth.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +20,16 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class LoginService {
 
     private final SignupRepo signupRepo;
@@ -31,6 +37,7 @@ public class LoginService {
     private final AuthenticationManager authenticationManager;
     private final MyUserDetailsService myUserDetailsService;
     private final JwtService jwtService;
+    private final OtpService otpService;
 
     public ResponseEntity<?> login(String email, String password) {
         log.debug("Attempt login for user: {}", email);
@@ -62,12 +69,32 @@ public class LoginService {
     public ResponseEntity<?> forgetPassword(EmailDto email) {
         String mail = email.getEmail();
         if(signupRepo.existsByEmail(mail)){
-            String username = "simple";
-            PasswordResetRequest request = new PasswordResetRequest(mail,username);
+            String username = signupRepo.getUserNameByEmail(mail);
+            String otp = OtpService.generateOtp();
+            PasswordResetRequest request = new PasswordResetRequest(mail,username,otp);
+            otpService.saveOtp(email.getEmail(),otp);
             kafkaTemplate.send("forget-password",request);
             return new ResponseEntity<>("reset password send to mail",HttpStatus.OK);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Email id");
+    }
+
+
+    public ResponseEntity<?> validateOtpAndSaveNewPassword(String otp, NewPassword newPassword) {
+        String savedOtp = otpService.getOtp(newPassword.getEmail());
+        if(otp.equals(savedOtp)){
+            int status = signupRepo.updatePasswordByEmail(newPassword.getNewPassword(), newPassword.getEmail());
+            Predicate<Integer> updateStatus = integer -> integer == 1;
+            if(updateStatus.test(status)){
+                otpService.deleteOtp(newPassword.getEmail());
+                return ResponseEntity.ok().body(Map.of(
+                        "message", "Password reset successfully",
+                        "redirect","/login"
+                ));
+            }
+            return ResponseEntity.status(500).body("Internal Server error");
+        }
+        return ResponseEntity.status(400).body("Invalid otp");
     }
 }
 
