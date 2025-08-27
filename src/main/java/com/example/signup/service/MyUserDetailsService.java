@@ -1,5 +1,6 @@
 package com.example.signup.service;
 
+import com.example.signup.model.Roles;
 import com.example.signup.model.User;
 import com.example.signup.repository.SignupRepo;
 import jakarta.validation.constraints.Email;
@@ -31,7 +32,7 @@ public class MyUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = signupRepo.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found"));
-        Set<SimpleGrantedAuthority> authorities = Set.of(new SimpleGrantedAuthority("ROLE_USER"));
+        Set<SimpleGrantedAuthority> authorities = Set.of(new SimpleGrantedAuthority(Roles.ROLE_USER.name()));
 
         log.info("{} is checking inside UserDetailsService",username);
 
