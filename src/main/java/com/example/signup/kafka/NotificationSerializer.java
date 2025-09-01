@@ -2,7 +2,6 @@ package com.example.signup.kafka;
 
 import com.example.signup.dto.LoginNotificationDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Serializer;
 
