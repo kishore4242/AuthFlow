@@ -1,11 +1,15 @@
 package com.example.signup.service;
 
 import com.example.signup.dto.EmailDto;
+import com.example.signup.dto.LoginNotificationDto;
 import com.example.signup.dto.NewPassword;
 import com.example.signup.dto.PasswordResetRequest;
+import com.example.signup.kafka.MessageSerializer;
+import com.example.signup.kafka.MessagingServices;
 import com.example.signup.repository.SignupRepo;
 import com.example.signup.security.auth.JwtService;
 import com.example.signup.security.auth.OtpService;
+import com.example.signup.utils.DateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -33,7 +37,7 @@ import java.util.stream.Collectors;
 public class LoginService {
 
     private final SignupRepo signupRepo;
-    private final KafkaTemplate<String, PasswordResetRequest> kafkaTemplate;
+    private final MessagingServices messagingServices;
     private final AuthenticationManager authenticationManager;
     private final MyUserDetailsService myUserDetailsService;
     private final JwtService jwtService;
@@ -54,6 +58,8 @@ public class LoginService {
                 UserDetails userDetails1 = myUserDetailsService.loadUserByUsername(email);
 
                 jwtToken = jwtService.generateToken(userDetails1);
+                LoginNotificationDto dto = new LoginNotificationDto(email, DateTime.getDateAndTime());
+                messagingServices.loginNotification(dto);
                 return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION,"Bearer "+jwtToken).body("Jwt created Done");
 
             }
@@ -73,7 +79,7 @@ public class LoginService {
             String otp = OtpService.generateOtp();
             PasswordResetRequest request = new PasswordResetRequest(mail,username,otp);
             otpService.saveOtp(email.getEmail(),otp);
-            kafkaTemplate.send("forget-password",request);
+            messagingServices.resetPasswordNotification(request);
             return new ResponseEntity<>("reset password send to mail",HttpStatus.OK);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid Email id");

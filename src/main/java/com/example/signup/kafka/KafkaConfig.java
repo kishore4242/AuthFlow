@@ -10,4 +10,9 @@ public class KafkaConfig {
     public NewTopic createTopic(){
         return new NewTopic("forget-password",3,(short)1);
     }
+
+    @Bean
+    public NewTopic createNotificationTopic(){
+        return new NewTopic("login-notification",3,(short)1);
+    }
 }
